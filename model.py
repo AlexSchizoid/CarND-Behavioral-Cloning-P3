@@ -124,24 +124,33 @@ def process_validation_samples(X_valid, Y_valid):
 
 def comma_ai_model():
     model = Sequential()
+
     model.add(Lambda(lambda x: x/127.5 - 1.0,input_shape=(64,64,3)))
     model.add(Convolution2D(32, 8,8 ,border_mode='same', subsample=(4,4)))
     model.add(ELU())
+
     model.add(Convolution2D(64, 8,8 ,border_mode='same',subsample=(4,4)))
     model.add(ELU())
+
     model.add(Convolution2D(128, 4,4,border_mode='same',subsample=(2,2)))
     model.add(ELU())
+
     model.add(Convolution2D(128, 2,2,border_mode='same',subsample=(1,1)))
     model.add(ELU())
+
     model.add(Flatten())
+
     model.add(Dropout(0.2))
     model.add(Dense(128))
     model.add(ELU())
+
     model.add(Dropout(0.5))
     model.add(Dense(128))
+
     model.add(Dense(1))
     
     model.compile(optimizer = Adam(lr=1e-4), loss='mse')
+
     return model
 
 #use pandas library to read data
