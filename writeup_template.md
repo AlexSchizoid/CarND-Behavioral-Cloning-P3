@@ -81,38 +81,46 @@ A good gauge of how well the model was working was actually trying it on track 1
 
 At the end of the process of gathering the data, augmenting it, and tuning hyperparameters, the vehicle is able to drive autonomously around the track without leaving the road.
 
+
 ####2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+The final model architecture is a variation of the comma.ai model(model.py comma_ai_model method). It consists of a convolution neural network with the following layers and layer sizez:
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+- Lambda normalizing layer - data between 0 and 1 with a mean of 0
+- Convolutional layer 32 depth 8x8 kernel 4x4 stride
+- Convolutional layer 64 depth 8x8 kernel 2x2 stride
+- Convolutional layer 128 depth 4x4 kernel 1x1 stride
+- Convolutional layer 128 depth 2x2 kernel 1x1 stride
+- Dropout(0.2)
+- fully connected layer - 128 neurons
+- Dropout(0.5)
+- fully connected layer - 128 neurons
 
-![alt text][image1]
+The activation function used is the ELU.
 
 ####3. Creation of the Training Set & Training Process
 
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+The udacity provided samples set is pretty good, but not enough by itself to traing a working model. That means i had to do some extra recording of data from the simulator. I drove some laps and got some data, but the model still had trouble at certain curbs. I tried to recorder some recovery laps but i couldn't seem to master the simulator well enought. Reading through the nanodegree slack channel i learned that a perfectly good approach might be do use the initial data i had and try to augment the dataset with more images. After much fiddling i settled on the follwing processing pipeline.
+
+The first stage is randomly reading the data. Since we have quite a lot of data we don't want to keep it in memory all the time. A better approach is to use a python generator which gets the data in batches and feeds it to the model. I read data from all three cameras - chose left/center/right camera at random. The output steering angle is adjusted with +/- 0.27 for the left and right cameras. Here is an example of camera input data:
+
+The second stage is a random warp of the image. Since a lot of the track is strainght driving we can see in this histogram of the initial data that there is an overwhelming number of small steering angle samples. We need a to equalize the histogram a bit in order to prevent the bias from transferring inside the model. This means generating images which correspond to a higher absolute steering angle. An approach discussed in the slack channel(Thanks Vivek and Kaspar) is to take the bottom half of the image and warp the perspective left or right randomly using a uniform distribution while adjusting the angle to match the new image. After running the generator a few times heres an updated histogram. It looks like the percentage of small angles is decreasing. Here is an output from this stage:
 
 ![alt text][image2]
 
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
+The third stage of the pipeline is croping the bottom and top part of the image. We don't really need these parts, since the bottom is mostly a view of the front of the car, while the top is mostly sky and some scenery. Also we take this opportunity and resize the image to make training a lot faster. Here is an output from this stage:
 
-![alt text][image3]
-![alt text][image4]
-![alt text][image5]
+![alt text][image2]
 
-Then I repeated this process on track two in order to get more data points.
+The next stage is a decision to randomly flip the image horizontally while adjusting the angle. This should avoid a bias from track 1 with left curves. Here is an output of this stage:
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
+![alt text][image2]
 
-![alt text][image6]
-![alt text][image7]
+The final stage is adjusting the brightness in the image. This should create samples with different ammounts of brightness which should help generalize the model. Here is an output of this stage:
 
-Etc ....
+![alt text][image2]
 
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+The validation set is mostly the initial set cropped and resized. I decided to do this since the training set is heavily augmented by the processing pipeline. The inital samples should provide a sufficient test baseline.
 
-
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+Conclusion:
+Data has a much larger importance in this problem than feedling with the model's hyper-parameters or processing of images. If you don't have the right data, the model just won't work as you expected. This proves that mse is not a good performance indicator of the model. Actually trying it out in the simulator is the best way to judge performance.
