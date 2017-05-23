@@ -112,7 +112,14 @@ The first stage is randomly reading the data. Since we have quite a lot of data 
 
 ![alt text][image4]
 
-The second stage is a random warp of the image. Since a lot of the track is strainght driving we can see in this histogram of the initial data that there is an overwhelming number of small steering angle samples. We need a to equalize the histogram a bit in order to prevent the bias from transferring inside the model. This means generating images which correspond to a higher absolute steering angle. An approach discussed in the slack channel(Thanks Vivek and Kaspar) is to take the bottom half of the image and warp the perspective left or right randomly using a uniform distribution while adjusting the angle to match the new image. After running the generator a few times heres an updated histogram. It looks like the percentage of small angles is decreasing. Here is an example of input and output from this stage:
+The second stage is a random warp of the image. Since a lot of the track is strainght driving we can see in this histogram of the initial data that there is an overwhelming number of small steering angle samples. We need a to equalize the histogram a bit in order to prevent the bias from transferring inside the model. This means generating images which correspond to a higher absolute steering angle. An approach discussed in the slack channel(Thanks Vivek and Kaspar) is to take the bottom half of the image and warp the perspective left or right randomly using a uniform distribution while adjusting the angle to match the new image. After running the generator a few times heres an updated histogram. It looks like the percentage of small angles is decreasing. 
+
+![alt text][image1]
+
+![alt text][image5]
+
+
+Here is an example of input and output from this stage:
 
 ![alt text][image6]
 
