@@ -24,9 +24,9 @@ The goals / steps of this project are the following:
 [image4]: ./examples/right_2016_12_01_13_30_48_287.jpg "Recovery Image"
 [image5]: ./examples/after_hist.png "Recovery Image"
 [image6]: ./examples/original.jpg "Normal Image"
-[image7]: ./examples/sheared.jpg "Flipped Image"
-[image7]: ./examples/cropped.jpg "Flipped Image"
-[image7]: ./examples/flipped.jpg "Flipped Image"
+[image7]: ./examples/sheared.jpg "ShearedImage"
+[image8]: ./examples/cropped.jpg "Cropped Image"
+[image9]: ./examples/flipped.jpg "Flipped Image"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -69,6 +69,8 @@ I decided to use an adam optimizer, so the learning rate was not tuned manually.
 ####4. Appropriate training data
 
 Since i had issues getting very good training data - even with a mouse, i can't say i'm really glad with my driving :) - i tried an approach of generating a lot of artificial data from what training data i already had, and from the udacity samples. 
+
+
 ###Model Architecture and Training Strategy
 
 ####1. Solution Design Approach
@@ -102,25 +104,33 @@ The activation function used is the ELU.
 
 The udacity provided samples set is pretty good, but not enough by itself to traing a working model. That means i had to do some extra recording of data from the simulator. I drove some laps and got some data, but the model still had trouble at certain curbs. I tried to recorder some recovery laps but i couldn't seem to master the simulator well enought. Reading through the nanodegree slack channel i learned that a perfectly good approach might be do use the initial data i had and try to augment the dataset with more images. After much fiddling i settled on the follwing processing pipeline.
 
-The first stage is randomly reading the data. Since we have quite a lot of data we don't want to keep it in memory all the time. A better approach is to use a python generator which gets the data in batches and feeds it to the model. I read data from all three cameras - chose left/center/right camera at random. The output steering angle is adjusted with +/- 0.27 for the left and right cameras. Here is an example of camera input data:
+The first stage is randomly reading the data. Since we have quite a lot of data we don't want to keep it in memory all the time. A better approach is to use a python generator which gets the data in batches and feeds it to the model. I read data from all three cameras - chose left/center/right camera at random. The output steering angle is adjusted with +/- 0.27 for the left and right cameras. Here is an example of left/center/right camera input data:
 
-The second stage is a random warp of the image. Since a lot of the track is strainght driving we can see in this histogram of the initial data that there is an overwhelming number of small steering angle samples. We need a to equalize the histogram a bit in order to prevent the bias from transferring inside the model. This means generating images which correspond to a higher absolute steering angle. An approach discussed in the slack channel(Thanks Vivek and Kaspar) is to take the bottom half of the image and warp the perspective left or right randomly using a uniform distribution while adjusting the angle to match the new image. After running the generator a few times heres an updated histogram. It looks like the percentage of small angles is decreasing. Here is an output from this stage:
+![alt text][image3]
 
 ![alt text][image2]
+
+![alt text][image4]
+
+The second stage is a random warp of the image. Since a lot of the track is strainght driving we can see in this histogram of the initial data that there is an overwhelming number of small steering angle samples. We need a to equalize the histogram a bit in order to prevent the bias from transferring inside the model. This means generating images which correspond to a higher absolute steering angle. An approach discussed in the slack channel(Thanks Vivek and Kaspar) is to take the bottom half of the image and warp the perspective left or right randomly using a uniform distribution while adjusting the angle to match the new image. After running the generator a few times heres an updated histogram. It looks like the percentage of small angles is decreasing. Here is an example of input and output from this stage:
+
+![alt text][image6]
+
+![alt text][image7]
 
 The third stage of the pipeline is croping the bottom and top part of the image. We don't really need these parts, since the bottom is mostly a view of the front of the car, while the top is mostly sky and some scenery. Also we take this opportunity and resize the image to make training a lot faster. Here is an output from this stage:
 
-![alt text][image2]
+![alt text][image8]
 
 The next stage is a decision to randomly flip the image horizontally while adjusting the angle. This should avoid a bias from track 1 with left curves. Here is an output of this stage:
 
-![alt text][image2]
+![alt text][image9]
 
-The final stage is adjusting the brightness in the image. This should create samples with different ammounts of brightness which should help generalize the model. Here is an output of this stage:
-
-![alt text][image2]
+The final stage is adjusting the brightness in the image. This should create samples with different ammounts of brightness which should help generalize the model. 
 
 The validation set is mostly the initial set cropped and resized. I decided to do this since the training set is heavily augmented by the processing pipeline. The inital samples should provide a sufficient test baseline.
+
+The training was done for 10 epochs of 100 batches of 256 samples each.
 
 Conclusion:
 Data has a much larger importance in this problem than feedling with the model's hyper-parameters or processing of images. If you don't have the right data, the model just won't work as you expected. This proves that mse is not a good performance indicator of the model. Actually trying it out in the simulator is the best way to judge performance.
